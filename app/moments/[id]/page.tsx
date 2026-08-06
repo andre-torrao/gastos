@@ -69,10 +69,10 @@ export default function MomentDetailPage() {
 
       <div className="flex items-center gap-3 mb-6">
         <div
-          className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
+          className="w-12 h-12 rounded-full flex items-center justify-center"
           style={{ backgroundColor: moment.color + "22" }}
         >
-          {moment.icon}
+          <span className="w-4 h-4 rounded-full" style={{ backgroundColor: moment.color }} />
         </div>
         <div>
           <h1 className="font-display text-2xl font-semibold">{moment.name}</h1>

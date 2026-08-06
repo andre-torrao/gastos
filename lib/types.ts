@@ -42,10 +42,10 @@ export type Expense = {
 };
 
 export const PALETTE = [
-  { name: "plum", hex: "#4B2E56" },
-  { name: "sage", hex: "#7C9473" },
-  { name: "gold", hex: "#D9A441" },
-  { name: "coral", hex: "#D9704F" },
-  { name: "teal", hex: "#3E7C7B" },
-  { name: "slate", hex: "#5A6B7A" },
+  { name: "butter", hex: "#EFC94C" },
+  { name: "sage", hex: "#9CB380" },
+  { name: "sky", hex: "#A9C2E0" },
+  { name: "blush", hex: "#EFAFC4" },
+  { name: "lilac", hex: "#B9A8D6" },
+  { name: "clay", hex: "#D9A98A" },
 ];

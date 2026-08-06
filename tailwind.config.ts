@@ -5,28 +5,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        paper: "#F7F4F0",
-        ink: "#211C22",
+        paper: "#F8F0DF",
+        ink: "#241F1A",
         plum: {
-          DEFAULT: "#4B2E56",
-          light: "#7A5A87",
-          soft: "#EFE6F1",
+          DEFAULT: "#241F1A",
+          light: "#5A5248",
+          soft: "#EDE6D8",
         },
         sage: {
-          DEFAULT: "#7C9473",
-          soft: "#E9EEE6",
+          DEFAULT: "#9CB380",
+          soft: "#E9EEE1",
         },
         gold: {
-          DEFAULT: "#D9A441",
-          soft: "#F8EDD8",
+          DEFAULT: "#EFC94C",
+          soft: "#FBF1D2",
         },
         coral: {
-          DEFAULT: "#D9704F",
-          soft: "#F7E5DD",
+          DEFAULT: "#E0855F",
+          soft: "#F8E4DA",
         },
         teal: {
-          DEFAULT: "#3E7C7B",
-          soft: "#E1EEED",
+          DEFAULT: "#A9C2E0",
+          soft: "#E9F0F8",
         },
         slate: {
           DEFAULT: "#5A6B7A",

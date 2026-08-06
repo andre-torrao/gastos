@@ -18,7 +18,6 @@ export default function MomentsPage() {
   const [showForm, setShowForm] = useState(false);
 
   const [name, setName] = useState("");
-  const [icon, setIcon] = useState("✈️");
   const [budgetInput, setBudgetInput] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -47,7 +46,7 @@ export default function MomentsPage() {
     await supabase.from("moments").insert({
       user_id: user.id,
       name: name.trim(),
-      icon,
+      icon: "",
       color,
       start_date: new Date().toISOString().slice(0, 10),
       budget: budgetInput.trim() ? parseFloat(budgetInput.replace(",", ".")) : null,
@@ -96,10 +95,10 @@ export default function MomentsPage() {
             >
               <div className="flex items-center gap-3 mb-3">
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: m.color + "22" }}
                 >
-                  {m.icon}
+                  <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: m.color }} />
                 </div>
                 <div className="flex-1">
                   <p className="font-body font-medium text-sm">{m.name}</p>
@@ -135,17 +134,13 @@ export default function MomentsPage() {
                 <X size={20} />
               </button>
             </div>
-            <div className="grid grid-cols-[4.5rem_1fr] gap-3 mb-4">
-              <input
-                value={icon}
-                onChange={(e) => setIcon(e.target.value)}
-                className="rounded-xl border border-ink/10 bg-white px-3 py-3 text-center text-lg outline-none focus:border-plum"
-              />
+            <div className="mb-4">
+              <label className="block text-xs font-body text-ink/60 mb-1">Nome</label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Viagem de fim de ano"
-                className="rounded-xl border border-ink/10 bg-white px-4 py-3 font-body text-sm outline-none focus:border-plum"
+                className="w-full rounded-xl border border-ink/10 bg-white px-4 py-3 font-body text-sm outline-none focus:border-plum"
               />
             </div>
             <label className="block text-xs font-body text-ink/60 mb-1">Orcamento (opcional)</label>

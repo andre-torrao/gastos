@@ -117,7 +117,7 @@ export default function ExpenseForm({
         >
           <option value="">Sem categoria</option>
           {grouped.map(({ macro, subs }) => (
-            <optgroup key={macro.id} label={`${macro.icon} ${macro.name}`}>
+            <optgroup key={macro.id} label={macro.name}>
               {subs.length === 0 && <option value={macro.id}>{macro.name} (geral)</option>}
               {subs.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -139,7 +139,7 @@ export default function ExpenseForm({
               <option value="">Nenhum — gasto do mes</option>
               {moments.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.icon} {m.name}
+                  {m.name}
                 </option>
               ))}
             </select>

@@ -15,7 +15,6 @@ export default function CategoriesPage() {
   const [macroCategories, setMacroCategories] = useState<MacroCategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [newMacroName, setNewMacroName] = useState("");
-  const [newMacroIcon, setNewMacroIcon] = useState("🏷️");
   const [subInputs, setSubInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -41,7 +40,7 @@ export default function CategoriesPage() {
     await supabase.from("macro_categories").insert({
       user_id: user.id,
       name: newMacroName.trim(),
-      icon: newMacroIcon || "🏷️",
+      icon: "",
       color,
     });
     setNewMacroName("");
@@ -88,10 +87,10 @@ export default function CategoriesPage() {
           <div key={mc.id} className="bg-white rounded-xl2 p-4 border border-ink/5">
             <div className="flex items-center gap-2 mb-3">
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0"
+                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
                 style={{ backgroundColor: mc.color + "22" }}
               >
-                {mc.icon}
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: mc.color }} />
               </div>
               <span className="font-body font-medium text-sm flex-1">{mc.name}</span>
               <button onClick={() => removeMacro(mc.id)} className="text-ink/20">
@@ -136,12 +135,7 @@ export default function CategoriesPage() {
 
       <div className="bg-white rounded-xl2 p-4 border border-ink/5">
         <p className="font-body text-sm font-medium mb-3">Nova categoria-macro</p>
-        <div className="grid grid-cols-[3.5rem_1fr_2.5rem] gap-2">
-          <input
-            value={newMacroIcon}
-            onChange={(e) => setNewMacroIcon(e.target.value)}
-            className="rounded-lg border border-ink/10 bg-paper px-2 py-2 text-center text-sm outline-none focus:border-plum"
-          />
+        <div className="grid grid-cols-[1fr_2.5rem] gap-2">
           <input
             value={newMacroName}
             onChange={(e) => setNewMacroName(e.target.value)}

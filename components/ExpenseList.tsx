@@ -9,11 +9,11 @@ function categoryFor(exp: Expense, categories: Category[], macros: MacroCategory
   const cat = categories.find((c) => c.id === exp.category_id);
   if (cat) {
     const macro = macros.find((m) => m.id === cat.macro_category_id);
-    return { label: cat.name, icon: macro?.icon ?? "•", color: macro?.color ?? "#999" };
+    return { label: cat.name, color: macro?.color ?? "#999" };
   }
   const macro = macros.find((m) => m.id === exp.category_id);
-  if (macro) return { label: macro.name, icon: macro.icon, color: macro.color };
-  return { label: "Sem categoria", icon: "•", color: "#999" };
+  if (macro) return { label: macro.name, color: macro.color };
+  return { label: "Sem categoria", color: "#999" };
 }
 
 export default function ExpenseList({
@@ -58,10 +58,10 @@ export default function ExpenseList({
             className="flex items-center gap-3 bg-white rounded-xl2 px-4 py-3 border border-ink/5"
           >
             <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0"
+              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
               style={{ backgroundColor: cat.color + "22" }}
             >
-              {cat.icon}
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-body text-sm font-medium text-ink truncate flex items-center gap-1.5">

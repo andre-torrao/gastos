@@ -116,10 +116,12 @@ function DashboardInner() {
   const total = expenses.reduce((a, e) => a + Number(e.amount), 0);
   const segments = macroCategories.map((mc) => {
     const subIds = new Set(categories.filter((c) => c.macro_category_id === mc.id).map((c) => c.id));
-    const value = expenses
-      .filter((e) => e.category_id === mc.id || (e.category_id && subIds.has(e.category_id)))
-      .reduce((a, e) => a + Number(e.amount), 0);
-    return { name: mc.name, value, color: mc.color };
+    const inCategory = expenses.filter(
+      (e) => e.category_id === mc.id || (e.category_id && subIds.has(e.category_id))
+    );
+    const paid = inCategory.filter((e) => e.paid).reduce((a, e) => a + Number(e.amount), 0);
+    const pending = inCategory.filter((e) => !e.paid).reduce((a, e) => a + Number(e.amount), 0);
+    return { name: mc.name, paid, pending, color: mc.color };
   });
 
   const greetingName = displayName || user.email?.split("@")[0] || "";

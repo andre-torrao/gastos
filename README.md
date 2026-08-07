@@ -58,6 +58,12 @@ começa a usar.
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 4. **Deploy**. A partir daí, cada `git push` atualiza a app automaticamente.
 
+## Se já tinhas a app a correr (atualizações)
+
+Sempre que eu te enviar um novo zip com alterações à base de dados, vais
+encontrar ficheiros `supabase/migration_*.sql`. Corre-os por ordem no SQL
+Editor do Supabase (uma vez cada) e depois sobe o novo código para o GitHub.
+
 ## Como funciona a atualização automática
 
 - A tabela `expenses` tem `due_date` (data de pagamento), `paid` e `recurring`.

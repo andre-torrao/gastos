@@ -7,11 +7,19 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import Nav from "@/components/Nav";
 import MonthSwitcher from "@/components/MonthSwitcher";
-import CategoryRing, { formatEuro } from "@/components/CategoryRing";
+import RangeTabs, { RangeMode } from "@/components/RangeTabs";
+import CategoryRing from "@/components/CategoryRing";
 import ExpenseForm from "@/components/ExpenseForm";
 import ExpenseList from "@/components/ExpenseList";
 import { DEFAULT_MACRO_CATEGORIES } from "@/lib/defaultCategories";
+import { dayRange, weekRange, monthRange } from "@/lib/dateRanges";
 import type { Category, Expense, MacroCategory } from "@/lib/types";
+
+const RANGE_LABEL: Record<RangeMode, string> = {
+  dia: "Gastos de hoje",
+  semana: "Gastos desta semana",
+  mes: "Gastos do mes",
+};
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -20,6 +28,7 @@ export default function DashboardPage() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
+  const [rangeMode, setRangeMode] = useState<RangeMode>("mes");
   const [macroCategories, setMacroCategories] = useState<MacroCategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -54,19 +63,22 @@ export default function DashboardPage() {
     setBudget(settings?.monthly_budget ?? null);
   }, [ensureDefaultCategories]);
 
-  const loadExpenses = useCallback(async (userId: string, y: number, m: number) => {
-    const start = new Date(y, m, 1).toISOString().slice(0, 10);
-    const end = new Date(y, m + 1, 0).toISOString().slice(0, 10);
-    const { data } = await supabase
-      .from("expenses")
-      .select("*")
-      .eq("user_id", userId)
-      .is("moment_id", null)
-      .gte("due_date", start)
-      .lte("due_date", end)
-      .order("due_date");
-    setExpenses(data ?? []);
-  }, []);
+  const loadExpenses = useCallback(
+    async (userId: string, mode: RangeMode, y: number, m: number) => {
+      const { start, end } =
+        mode === "dia" ? dayRange() : mode === "semana" ? weekRange() : monthRange(y, m);
+      const { data } = await supabase
+        .from("expenses")
+        .select("*")
+        .eq("user_id", userId)
+        .is("moment_id", null)
+        .gte("due_date", start)
+        .lte("due_date", end)
+        .order("due_date");
+      setExpenses(data ?? []);
+    },
+    []
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -74,7 +86,7 @@ export default function DashboardPage() {
       // fallback: processa gastos cuja data ja chegou (o cron do Supabase trata disto tambem)
       await supabase.rpc("process_due_expenses");
       await loadStatic(user.id);
-      await loadExpenses(user.id, year, month);
+      await loadExpenses(user.id, rangeMode, year, month);
       setReady(true);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,8 +94,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user || !ready) return;
-    loadExpenses(user.id, year, month);
-  }, [year, month, user, ready, loadExpenses]);
+    loadExpenses(user.id, rangeMode, year, month);
+  }, [year, month, rangeMode, user, ready, loadExpenses]);
 
   async function saveBudget() {
     if (!user) return;
@@ -124,21 +136,32 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <MonthSwitcher year={year} month={month} onChange={(y, m) => { setYear(y); setMonth(m); }} />
+      <RangeTabs value={rangeMode} onChange={setRangeMode} />
+
+      {rangeMode === "mes" && (
+        <div className="mt-4">
+          <MonthSwitcher year={year} month={month} onChange={(y, m) => { setYear(y); setMonth(m); }} />
+        </div>
+      )}
 
       <div className="mt-6 bg-white rounded-xl2 p-6 border border-ink/5">
-        <CategoryRing segments={segments} total={total} budget={budget} centerLabel="Total do mes" />
+        <CategoryRing
+          segments={segments}
+          total={total}
+          budget={rangeMode === "mes" ? budget : null}
+          centerLabel={RANGE_LABEL[rangeMode]}
+        />
       </div>
 
       <div className="mt-8 flex items-center justify-between mb-3">
-        <h2 className="font-display text-lg font-semibold">Gastos do mes</h2>
+        <h2 className="font-display text-lg font-semibold">{RANGE_LABEL[rangeMode]}</h2>
         <span className="text-xs font-body text-ink/40">{expenses.length} lancamentos</span>
       </div>
       <ExpenseList
         expenses={expenses}
         categories={categories}
         macroCategories={macroCategories}
-        onChanged={() => loadExpenses(user.id, year, month)}
+        onChanged={() => loadExpenses(user.id, rangeMode, year, month)}
       />
 
       <button
@@ -157,7 +180,7 @@ export default function DashboardPage() {
           onClose={() => setShowForm(false)}
           onSaved={() => {
             setShowForm(false);
-            loadExpenses(user.id, year, month);
+            loadExpenses(user.id, rangeMode, year, month);
           }}
         />
       )}

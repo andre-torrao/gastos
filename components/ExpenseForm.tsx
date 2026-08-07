@@ -27,6 +27,8 @@ export default function ExpenseForm({
   const [dueDate, setDueDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [categoryId, setCategoryId] = useState<string>(categories[0]?.id ?? "");
   const [momentId, setMomentId] = useState<string>(defaultMomentId ?? "");
+  const [account, setAccount] = useState<"principal" | "poupanca">("principal");
+  const [notes, setNotes] = useState("");
   const [recurring, setRecurring] = useState(false);
   const [paidNow, setPaidNow] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -36,6 +38,21 @@ export default function ExpenseForm({
     macro: mc,
     subs: categories.filter((c) => c.macro_category_id === mc.id),
   }));
+
+  // Soma um mes a uma data "YYYY-MM-DD" sem passar por fuso horario
+  // (evita o Date/toISOString desviarem o dia por causa do UTC).
+  function addMonth(dateStr: string) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    let ny = y;
+    let nm = m + 1;
+    if (nm > 12) {
+      nm = 1;
+      ny += 1;
+    }
+    const lastDay = new Date(ny, nm, 0).getDate();
+    const nd = Math.min(d, lastDay);
+    return `${ny}-${String(nm).padStart(2, "0")}-${String(nd).padStart(2, "0")}`;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,6 +70,8 @@ export default function ExpenseForm({
       due_date: dueDate,
       category_id: categoryId || null,
       moment_id: momentId || null,
+      account,
+      notes: notes.trim() || null,
       recurring,
       paid: paidNow,
       paid_date: paidNow ? dueDate : null,
@@ -67,16 +86,15 @@ export default function ExpenseForm({
     // Se e recorrente, cria logo o lancamento do mes seguinte para que
     // ja aparecas na vista desse mes, sem teres de esperar que este seja pago.
     if (recurring) {
-      const next = new Date(dueDate + "T00:00:00");
-      next.setMonth(next.getMonth() + 1);
-      const nextDueDate = next.toISOString().slice(0, 10);
       await supabase.from("expenses").insert({
         user_id: userId,
         description: description.trim(),
         amount: value,
-        due_date: nextDueDate,
+        due_date: addMonth(dueDate),
         category_id: categoryId || null,
         moment_id: momentId || null,
+        account,
+        notes: notes.trim() || null,
         recurring: true,
         paid: false,
         paid_date: null,
@@ -167,6 +185,37 @@ export default function ExpenseForm({
             </select>
           </>
         )}
+
+        <label className="block text-xs font-body text-ink/60 mb-1">Conta</label>
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => setAccount("principal")}
+            className={`rounded-xl border py-2.5 text-sm font-body transition-colors ${
+              account === "principal" ? "bg-plum text-paper border-plum" : "border-ink/10 bg-white text-ink/70"
+            }`}
+          >
+            Conta principal
+          </button>
+          <button
+            type="button"
+            onClick={() => setAccount("poupanca")}
+            className={`rounded-xl border py-2.5 text-sm font-body transition-colors ${
+              account === "poupanca" ? "bg-plum text-paper border-plum" : "border-ink/10 bg-white text-ink/70"
+            }`}
+          >
+            Conta poupança
+          </button>
+        </div>
+
+        <label className="block text-xs font-body text-ink/60 mb-1">Notas (opcional)</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Alguma nota sobre este gasto..."
+          rows={2}
+          className="w-full mb-4 rounded-xl border border-ink/10 bg-white px-4 py-3 font-body text-sm outline-none focus:border-plum resize-none"
+        />
 
         <div className="flex items-center gap-6 mb-6">
           <label className="flex items-center gap-2 text-sm font-body text-ink/80">

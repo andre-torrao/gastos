@@ -67,13 +67,19 @@ export default function ExpenseList({
               <p className="font-body text-sm font-medium text-ink truncate flex items-center gap-1.5">
                 {exp.description}
                 {exp.recurring && <Repeat size={12} className="text-ink/30 shrink-0" />}
+                {exp.account === "poupanca" && (
+                  <span className="text-[9px] font-body bg-sage-soft text-sage px-1.5 py-0.5 rounded-full shrink-0">
+                    Poupança
+                  </span>
+                )}
               </p>
-              <p className="text-xs text-ink/50 font-body">
+              <p className="text-xs text-ink/50 font-body truncate">
                 {cat.label} ·{" "}
                 {new Date(exp.due_date + "T00:00:00").toLocaleDateString("pt-PT", {
                   day: "2-digit",
                   month: "short",
                 })}
+                {exp.notes && <> · {exp.notes}</>}
               </p>
             </div>
             <div className="text-right shrink-0">

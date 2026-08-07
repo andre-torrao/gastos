@@ -50,6 +50,8 @@ create table if not exists expenses (
   paid boolean not null default false,
   paid_date date,
   recurring boolean not null default false,
+  account text not null default 'principal' check (account in ('principal', 'poupanca')),
+  notes text,
   created_at timestamptz not null default now()
 );
 -- nota: category_id pode apontar tanto para macro_categories.id (categoria
@@ -101,25 +103,32 @@ as $$
 declare
   r record;
 begin
+  -- 1) marca como pagas as despesas cuja data ja chegou
   for r in
     select * from expenses where due_date <= current_date and paid = false
   loop
     update expenses
       set paid = true, paid_date = r.due_date
       where id = r.id;
+  end loop;
 
-    if r.recurring then
-      if not exists (
-        select 1 from expenses
-        where user_id = r.user_id
-          and description = r.description
-          and category_id is not distinct from r.category_id
-          and moment_id is not distinct from r.moment_id
-          and due_date = (r.due_date + interval '1 month')::date
-      ) then
-        insert into expenses (user_id, category_id, moment_id, description, amount, due_date, paid, recurring)
-        values (r.user_id, r.category_id, r.moment_id, r.description, r.amount, (r.due_date + interval '1 month')::date, false, true);
-      end if;
+  -- 2) garante que TODAS as despesas recorrentes (pagas ou nao, passadas
+  --    ou futuras) tem sempre o lancamento do mes seguinte criado. Isto
+  --    cobre tanto as recorrencias que acabaram de ser marcadas como pagas
+  --    acima, como recorrencias antigas que ainda nao tinham sido geradas.
+  for r in
+    select * from expenses where recurring = true
+  loop
+    if not exists (
+      select 1 from expenses
+      where user_id = r.user_id
+        and description = r.description
+        and category_id is not distinct from r.category_id
+        and moment_id is not distinct from r.moment_id
+        and due_date = (r.due_date + interval '1 month')::date
+    ) then
+      insert into expenses (user_id, category_id, moment_id, description, amount, due_date, paid, recurring, account, notes)
+      values (r.user_id, r.category_id, r.moment_id, r.description, r.amount, (r.due_date + interval '1 month')::date, false, true, r.account, r.notes);
     end if;
   end loop;
 end;

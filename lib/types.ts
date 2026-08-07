@@ -38,6 +38,8 @@ export type Expense = {
   paid: boolean;
   paid_date: string | null;
   recurring: boolean;
+  account: "principal" | "poupanca";
+  notes: string | null;
   created_at: string;
 };
 

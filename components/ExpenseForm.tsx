@@ -57,11 +57,33 @@ export default function ExpenseForm({
       paid: paidNow,
       paid_date: paidNow ? dueDate : null,
     });
-    setSaving(false);
+
     if (insertError) {
+      setSaving(false);
       setError(insertError.message);
       return;
     }
+
+    // Se e recorrente, cria logo o lancamento do mes seguinte para que
+    // ja aparecas na vista desse mes, sem teres de esperar que este seja pago.
+    if (recurring) {
+      const next = new Date(dueDate + "T00:00:00");
+      next.setMonth(next.getMonth() + 1);
+      const nextDueDate = next.toISOString().slice(0, 10);
+      await supabase.from("expenses").insert({
+        user_id: userId,
+        description: description.trim(),
+        amount: value,
+        due_date: nextDueDate,
+        category_id: categoryId || null,
+        moment_id: momentId || null,
+        recurring: true,
+        paid: false,
+        paid_date: null,
+      });
+    }
+
+    setSaving(false);
     onSaved();
   }
 

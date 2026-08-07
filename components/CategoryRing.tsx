@@ -13,7 +13,7 @@ function formatEuro(n: number) {
 const SIZE = 240;
 const STROKE = 20;
 const RADIUS = (SIZE - STROKE) / 2;
-const GAP = 3.2; // percentagem da circunferencia reservada como espaco entre segmentos
+const GAP = 5.5; // percentagem da circunferencia reservada como espaco entre segmentos
 
 export default function CategoryRing({
   segments,

@@ -16,14 +16,17 @@ export default function Nav() {
   const { signOut } = useAuth();
 
   return (
-    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[27rem] bg-ink text-paper rounded-xl2 shadow-xl px-2 py-2 flex items-center justify-between z-40">
+    <nav
+      className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[27rem] bg-ink text-paper rounded-xl2 shadow-xl px-2 py-2 flex items-center justify-between z-40"
+      style={{ bottom: "max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))" }}
+    >
       {items.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
         return (
           <Link
             key={href}
             href={href}
-            className={`flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-colors ${
+            className={`flex flex-col items-center gap-0.5 px-4 py-2.5 rounded-xl transition-colors ${
               active ? "bg-paper text-ink" : "text-paper/70"
             }`}
           >
@@ -34,7 +37,7 @@ export default function Nav() {
       })}
       <button
         onClick={signOut}
-        className="flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl text-paper/70"
+        className="flex flex-col items-center gap-0.5 px-4 py-2.5 rounded-xl text-paper/70"
       >
         <LogOut size={18} />
         <span className="text-[10px] font-body">Sair</span>

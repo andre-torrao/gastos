@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budget, setBudget] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState("");
   const [ready, setReady] = useState(false);
@@ -119,7 +120,7 @@ export default function DashboardPage() {
   const firstName = user.email?.split("@")[0] ?? "";
 
   return (
-    <div className="phone-shell px-5 pt-8">
+    <div className="phone-shell px-5" style={{ paddingTop: "max(2rem, env(safe-area-inset-top))" }}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-ink/50 font-body text-sm">Ola,</p>
@@ -162,11 +163,13 @@ export default function DashboardPage() {
         categories={categories}
         macroCategories={macroCategories}
         onChanged={() => loadExpenses(user.id, rangeMode, year, month)}
+        onEdit={(exp) => setEditingExpense(exp)}
       />
 
       <button
         onClick={() => setShowForm(true)}
-        className="fixed bottom-24 right-1/2 translate-x-[9.5rem] w-14 h-14 rounded-full bg-plum text-paper flex items-center justify-center shadow-xl z-40"
+        className="fixed right-1/2 translate-x-[9.5rem] w-14 h-14 rounded-full bg-plum text-paper flex items-center justify-center shadow-xl z-40"
+        style={{ bottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
       >
         <Plus size={26} />
       </button>
@@ -180,6 +183,21 @@ export default function DashboardPage() {
           onClose={() => setShowForm(false)}
           onSaved={() => {
             setShowForm(false);
+            loadExpenses(user.id, rangeMode, year, month);
+          }}
+        />
+      )}
+
+      {editingExpense && (
+        <ExpenseForm
+          userId={user.id}
+          macroCategories={macroCategories}
+          categories={categories}
+          moments={[]}
+          expense={editingExpense}
+          onClose={() => setEditingExpense(null)}
+          onSaved={() => {
+            setEditingExpense(null);
             loadExpenses(user.id, rangeMode, year, month);
           }}
         />

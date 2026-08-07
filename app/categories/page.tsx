@@ -76,7 +76,7 @@ export default function CategoriesPage() {
   if (loading || !user) return null;
 
   return (
-    <div className="phone-shell px-5 pt-8">
+    <div className="phone-shell px-5" style={{ paddingTop: "max(2rem, env(safe-area-inset-top))" }}>
       <h1 className="font-display text-2xl font-semibold mb-1">Categorias</h1>
       <p className="text-ink/50 font-body text-sm mb-6">
         Organiza os teus gastos em categorias-macro (ex: Casa) e subcategorias (ex: Renda, Eletricidade).

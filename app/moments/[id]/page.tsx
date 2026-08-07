@@ -21,6 +21,7 @@ export default function MomentDetailPage() {
   const [macroCategories, setMacroCategories] = useState<MacroCategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
@@ -57,7 +58,7 @@ export default function MomentDetailPage() {
   const pct = moment.budget ? Math.min(100, (total / moment.budget) * 100) : null;
 
   return (
-    <div className="phone-shell px-5 pt-8">
+    <div className="phone-shell px-5" style={{ paddingTop: "max(2rem, env(safe-area-inset-top))" }}>
       <div className="flex items-center justify-between mb-6">
         <button onClick={() => router.push("/moments")} className="p-2 -ml-2 text-ink/60">
           <ArrowLeft size={20} />
@@ -113,6 +114,7 @@ export default function MomentDetailPage() {
         categories={categories}
         macroCategories={macroCategories}
         onChanged={() => load(user.id)}
+        onEdit={(exp) => setEditingExpense(exp)}
       />
 
       {showForm && (
@@ -125,6 +127,21 @@ export default function MomentDetailPage() {
           onClose={() => setShowForm(false)}
           onSaved={() => {
             setShowForm(false);
+            load(user.id);
+          }}
+        />
+      )}
+
+      {editingExpense && (
+        <ExpenseForm
+          userId={user.id}
+          macroCategories={macroCategories}
+          categories={categories}
+          moments={[moment]}
+          expense={editingExpense}
+          onClose={() => setEditingExpense(null)}
+          onSaved={() => {
+            setEditingExpense(null);
             load(user.id);
           }}
         />

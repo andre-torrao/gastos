@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import type { Category, MacroCategory, Moment } from "@/lib/types";
+import type { Category, Expense, MacroCategory, Moment } from "@/lib/types";
 
 export default function ExpenseForm({
   userId,
@@ -11,6 +11,7 @@ export default function ExpenseForm({
   categories,
   moments,
   defaultMomentId,
+  expense,
   onClose,
   onSaved,
 }: {
@@ -19,19 +20,23 @@ export default function ExpenseForm({
   categories: Category[];
   moments: Moment[];
   defaultMomentId?: string | null;
+  expense?: Expense | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
-  const [dueDate, setDueDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [categoryId, setCategoryId] = useState<string>(categories[0]?.id ?? "");
-  const [momentId, setMomentId] = useState<string>(defaultMomentId ?? "");
-  const [account, setAccount] = useState<"principal" | "poupanca">("principal");
-  const [notes, setNotes] = useState("");
-  const [recurring, setRecurring] = useState(false);
-  const [paidNow, setPaidNow] = useState(false);
+  const isEditing = !!expense;
+
+  const [description, setDescription] = useState(expense?.description ?? "");
+  const [amount, setAmount] = useState(expense ? String(expense.amount) : "");
+  const [dueDate, setDueDate] = useState(expense?.due_date ?? new Date().toISOString().slice(0, 10));
+  const [categoryId, setCategoryId] = useState<string>(expense?.category_id ?? categories[0]?.id ?? "");
+  const [momentId, setMomentId] = useState<string>(expense?.moment_id ?? defaultMomentId ?? "");
+  const [account, setAccount] = useState<"principal" | "poupanca">(expense?.account ?? "principal");
+  const [notes, setNotes] = useState(expense?.notes ?? "");
+  const [recurring, setRecurring] = useState(expense?.recurring ?? false);
+  const [paidNow, setPaidNow] = useState(expense?.paid ?? false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const grouped = macroCategories.map((mc) => ({
@@ -54,6 +59,44 @@ export default function ExpenseForm({
     return `${ny}-${String(nm).padStart(2, "0")}-${String(nd).padStart(2, "0")}`;
   }
 
+  async function ensureNextOccurrence(payload: {
+    description: string;
+    amount: number;
+    due_date: string;
+    category_id: string | null;
+    moment_id: string | null;
+    account: "principal" | "poupanca";
+    notes: string | null;
+  }) {
+    const nextDue = addMonth(payload.due_date);
+    let query = supabase
+      .from("expenses")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("description", payload.description)
+      .eq("due_date", nextDue);
+    query = payload.moment_id
+      ? query.eq("moment_id", payload.moment_id)
+      : query.is("moment_id", null);
+    const { data: existing } = await query.maybeSingle();
+
+    if (!existing) {
+      await supabase.from("expenses").insert({
+        user_id: userId,
+        description: payload.description,
+        amount: payload.amount,
+        due_date: nextDue,
+        category_id: payload.category_id,
+        moment_id: payload.moment_id,
+        account: payload.account,
+        notes: payload.notes,
+        recurring: true,
+        paid: false,
+        paid_date: null,
+      });
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -63,8 +106,8 @@ export default function ExpenseForm({
       return;
     }
     setSaving(true);
-    const { error: insertError } = await supabase.from("expenses").insert({
-      user_id: userId,
+
+    const payload = {
       description: description.trim(),
       amount: value,
       due_date: dueDate,
@@ -72,36 +115,56 @@ export default function ExpenseForm({
       moment_id: momentId || null,
       account,
       notes: notes.trim() || null,
-      recurring,
-      paid: paidNow,
-      paid_date: paidNow ? dueDate : null,
-    });
+    };
 
-    if (insertError) {
-      setSaving(false);
-      setError(insertError.message);
-      return;
+    if (isEditing && expense) {
+      const { error: updateError } = await supabase
+        .from("expenses")
+        .update({
+          ...payload,
+          recurring,
+          paid: paidNow,
+          paid_date: paidNow ? expense.paid_date ?? dueDate : null,
+        })
+        .eq("id", expense.id);
+
+      if (updateError) {
+        setSaving(false);
+        setError(updateError.message);
+        return;
+      }
+    } else {
+      const { error: insertError } = await supabase.from("expenses").insert({
+        user_id: userId,
+        ...payload,
+        recurring,
+        paid: paidNow,
+        paid_date: paidNow ? dueDate : null,
+      });
+
+      if (insertError) {
+        setSaving(false);
+        setError(insertError.message);
+        return;
+      }
     }
 
-    // Se e recorrente, cria logo o lancamento do mes seguinte para que
-    // ja aparecas na vista desse mes, sem teres de esperar que este seja pago.
+    // Se e recorrente, garante que o lancamento do mes seguinte existe,
+    // para ja apareceres nessa vista sem esperar que este seja pago.
     if (recurring) {
-      await supabase.from("expenses").insert({
-        user_id: userId,
-        description: description.trim(),
-        amount: value,
-        due_date: addMonth(dueDate),
-        category_id: categoryId || null,
-        moment_id: momentId || null,
-        account,
-        notes: notes.trim() || null,
-        recurring: true,
-        paid: false,
-        paid_date: null,
-      });
+      await ensureNextOccurrence(payload);
     }
 
     setSaving(false);
+    onSaved();
+  }
+
+  async function handleDelete() {
+    if (!expense) return;
+    if (!confirm("Apagar este gasto?")) return;
+    setDeleting(true);
+    await supabase.from("expenses").delete().eq("id", expense.id);
+    setDeleting(false);
     onSaved();
   }
 
@@ -110,13 +173,29 @@ export default function ExpenseForm({
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSubmit}
-        className="bg-paper w-full max-w-[30rem] rounded-t-xl2 p-6 pb-8 max-h-[88dvh] overflow-y-auto"
+        className="bg-paper w-full max-w-[30rem] rounded-t-xl2 p-6 pb-8 max-h-[90dvh] overflow-y-auto"
+        style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-display text-xl font-semibold">Novo gasto</h2>
-          <button type="button" onClick={onClose} className="p-1 text-ink/50">
-            <X size={20} />
-          </button>
+          <h2 className="font-display text-xl font-semibold">
+            {isEditing ? "Editar gasto" : "Novo gasto"}
+          </h2>
+          <div className="flex items-center gap-1">
+            {isEditing && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="w-9 h-9 flex items-center justify-center text-coral/70"
+                title="Apagar gasto"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+            <button type="button" onClick={onClose} className="w-9 h-9 flex items-center justify-center text-ink/50">
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <label className="block text-xs font-body text-ink/60 mb-1">Descricao</label>
@@ -235,7 +314,7 @@ export default function ExpenseForm({
           disabled={saving}
           className="w-full bg-plum text-paper font-body font-medium rounded-xl py-3.5 disabled:opacity-60"
         >
-          {saving ? "A guardar..." : "Guardar gasto"}
+          {saving ? "A guardar..." : isEditing ? "Guardar alterações" : "Guardar gasto"}
         </button>
       </form>
     </div>

@@ -5,10 +5,21 @@
 html, body {
   background-color: #F8F0DF;
   color: #241F1A;
+  overscroll-behavior-y: none;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS faz zoom automatico em inputs com font-size < 16px ao focar.
+   Forcamos 16px em todos os campos para evitar esse comportamento. */
+input, select, textarea {
+  font-size: 16px;
+}
+
+button {
+  touch-action: manipulation;
 }
 
 ::-webkit-scrollbar {
@@ -26,5 +37,5 @@ html, body {
   margin-right: auto;
   min-height: 100dvh;
   position: relative;
-  padding-bottom: 5.5rem;
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
 }

@@ -36,7 +36,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="phone-shell px-6 pt-24">
+    <div className="phone-shell px-6" style={{ paddingTop: "max(6rem, calc(env(safe-area-inset-top) + 4rem))" }}>
       <h1 className="font-display text-3xl font-semibold mb-1">Gastos</h1>
       <p className="text-ink/50 font-body text-sm mb-8">A tua gestao pessoal de despesas.</p>
 

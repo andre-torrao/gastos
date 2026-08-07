@@ -1,0 +1,10 @@
+{
+  "name": "Gastos",
+  "short_name": "Gastos",
+  "description": "Gestao pessoal de gastos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F0DF",
+  "theme_color": "#F8F0DF",
+  "icons": []
+}

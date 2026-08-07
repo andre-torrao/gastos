@@ -61,7 +61,7 @@ export default function MomentsPage() {
   if (loading || !user) return null;
 
   return (
-    <div className="phone-shell px-5 pt-8">
+    <div className="phone-shell px-5" style={{ paddingTop: "max(2rem, env(safe-area-inset-top))" }}>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl font-semibold">Momentos</h1>
         <button

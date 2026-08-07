@@ -21,13 +21,16 @@ export default function ExpenseList({
   categories,
   macroCategories,
   onChanged,
+  onEdit,
 }: {
   expenses: Expense[];
   categories: Category[];
   macroCategories: MacroCategory[];
   onChanged: () => void;
+  onEdit: (exp: Expense) => void;
 }) {
-  async function togglePaid(exp: Expense) {
+  async function togglePaid(exp: Expense, e: React.MouseEvent) {
+    e.stopPropagation();
     await supabase
       .from("expenses")
       .update({ paid: !exp.paid, paid_date: !exp.paid ? new Date().toISOString().slice(0, 10) : null })
@@ -35,7 +38,9 @@ export default function ExpenseList({
     onChanged();
   }
 
-  async function remove(exp: Expense) {
+  async function remove(exp: Expense, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm("Apagar este gasto?")) return;
     await supabase.from("expenses").delete().eq("id", exp.id);
     onChanged();
   }
@@ -53,9 +58,10 @@ export default function ExpenseList({
       {expenses.map((exp) => {
         const cat = categoryFor(exp, categories, macroCategories);
         return (
-          <div
+          <button
             key={exp.id}
-            className="flex items-center gap-3 bg-white rounded-xl2 px-4 py-3 border border-ink/5"
+            onClick={() => onEdit(exp)}
+            className="w-full flex items-center gap-3 bg-white rounded-xl2 px-4 py-3 border border-ink/5 text-left active:bg-ink/[0.03]"
           >
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
@@ -89,18 +95,22 @@ export default function ExpenseList({
               <p className="text-[10px] font-body text-sage">{exp.paid ? "Pago" : "Por pagar"}</p>
             </div>
             <button
-              onClick={() => togglePaid(exp)}
-              className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${
+              onClick={(e) => togglePaid(exp, e)}
+              className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${
                 exp.paid ? "bg-sage border-sage text-white" : "border-ink/20 text-ink/20"
               }`}
               title="Marcar como pago"
             >
               <Check size={14} />
             </button>
-            <button onClick={() => remove(exp)} className="text-ink/20 shrink-0" title="Apagar">
+            <button
+              onClick={(e) => remove(exp, e)}
+              className="w-9 h-9 flex items-center justify-center text-ink/20 shrink-0"
+              title="Apagar"
+            >
               <Trash2 size={15} />
             </button>
-          </div>
+          </button>
         );
       })}
     </div>

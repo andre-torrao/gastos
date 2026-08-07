@@ -16,18 +16,23 @@ export default function RangeTabs({
   onChange: (v: RangeMode) => void;
 }) {
   return (
-    <div className="flex bg-white border border-ink/10 rounded-full p-1 gap-1">
-      {OPTIONS.map((o) => (
-        <button
-          key={o.value}
-          onClick={() => onChange(o.value)}
-          className={`flex-1 text-xs font-body py-2 rounded-full transition-colors ${
-            value === o.value ? "bg-plum text-paper" : "text-ink/50"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div className="flex gap-2">
+      {OPTIONS.map((o) => {
+        const active = value === o.value;
+        return (
+          <button
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            className={`px-4 py-2 rounded-full text-sm font-body font-medium border transition-colors ${
+              active
+                ? "bg-gold border-gold text-ink"
+                : "bg-transparent border-ink/15 text-ink/50"
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

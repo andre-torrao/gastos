@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Settings2 } from "lucide-react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import Nav from "@/components/Nav";
@@ -22,8 +21,17 @@ const RANGE_LABEL: Record<RangeMode, string> = {
 };
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardInner />
+    </Suspense>
+  );
+}
+
+function DashboardInner() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -32,16 +40,21 @@ export default function DashboardPage() {
   const [macroCategories, setMacroCategories] = useState<MacroCategory[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [budget, setBudget] = useState<number | null>(null);
+  const [displayName, setDisplayName] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [editingBudget, setEditingBudget] = useState(false);
-  const [budgetInput, setBudgetInput] = useState("");
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
   }, [loading, user, router]);
+
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setShowForm(true);
+      router.replace("/");
+    }
+  }, [searchParams, router]);
 
   const ensureDefaultCategories = useCallback(async (userId: string) => {
     const { data } = await supabase.from("macro_categories").select("*").eq("user_id", userId);
@@ -57,11 +70,11 @@ export default function DashboardPage() {
     const [{ data: macros }, { data: cats }, { data: settings }] = await Promise.all([
       supabase.from("macro_categories").select("*").eq("user_id", userId).order("created_at"),
       supabase.from("categories").select("*").eq("user_id", userId).order("created_at"),
-      supabase.from("user_settings").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("user_settings").select("display_name").eq("user_id", userId).maybeSingle(),
     ]);
     setMacroCategories(macros ?? []);
     setCategories(cats ?? []);
-    setBudget(settings?.monthly_budget ?? null);
+    setDisplayName(settings?.display_name ?? "");
   }, [ensureDefaultCategories]);
 
   const loadExpenses = useCallback(
@@ -98,14 +111,6 @@ export default function DashboardPage() {
     loadExpenses(user.id, rangeMode, year, month);
   }, [year, month, rangeMode, user, ready, loadExpenses]);
 
-  async function saveBudget() {
-    if (!user) return;
-    const value = budgetInput.trim() === "" ? null : parseFloat(budgetInput.replace(",", "."));
-    await supabase.from("user_settings").upsert({ user_id: user.id, monthly_budget: value });
-    setBudget(value);
-    setEditingBudget(false);
-  }
-
   if (loading || !user) return null;
 
   const total = expenses.reduce((a, e) => a + Number(e.amount), 0);
@@ -117,24 +122,13 @@ export default function DashboardPage() {
     return { name: mc.name, value, color: mc.color };
   });
 
-  const firstName = user.email?.split("@")[0] ?? "";
+  const greetingName = displayName || user.email?.split("@")[0] || "";
 
   return (
     <div className="phone-shell px-5" style={{ paddingTop: "max(2rem, env(safe-area-inset-top))" }}>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-ink/50 font-body text-sm">Ola,</p>
-          <h1 className="font-display text-2xl font-semibold capitalize">{firstName}</h1>
-        </div>
-        <button
-          onClick={() => {
-            setBudgetInput(budget?.toString() ?? "");
-            setEditingBudget(true);
-          }}
-          className="w-10 h-10 rounded-full bg-white border border-ink/10 flex items-center justify-center text-ink/50"
-        >
-          <Settings2 size={18} />
-        </button>
+      <div className="mb-6">
+        <p className="text-ink/50 font-body text-sm">Olá,</p>
+        <h1 className="font-display text-2xl font-semibold capitalize">{greetingName}</h1>
       </div>
 
       <RangeTabs value={rangeMode} onChange={setRangeMode} />
@@ -149,7 +143,7 @@ export default function DashboardPage() {
         <CategoryRing
           segments={segments}
           total={total}
-          budget={rangeMode === "mes" ? budget : null}
+          budget={null}
           centerLabel={RANGE_LABEL[rangeMode]}
         />
       </div>
@@ -165,14 +159,6 @@ export default function DashboardPage() {
         onChanged={() => loadExpenses(user.id, rangeMode, year, month)}
         onEdit={(exp) => setEditingExpense(exp)}
       />
-
-      <button
-        onClick={() => setShowForm(true)}
-        className="fixed right-1/2 translate-x-[9.5rem] w-14 h-14 rounded-full bg-plum text-paper flex items-center justify-center shadow-xl z-40"
-        style={{ bottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
-      >
-        <Plus size={26} />
-      </button>
 
       {showForm && (
         <ExpenseForm
@@ -203,31 +189,7 @@ export default function DashboardPage() {
         />
       )}
 
-      {editingBudget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6" onClick={() => setEditingBudget(false)}>
-          <div className="bg-paper rounded-xl2 p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-display text-lg font-semibold mb-1">Limite mensal</h3>
-            <p className="text-xs text-ink/50 font-body mb-4">
-              Define um objetivo de gasto para veres o progresso no anel. Deixa vazio para nao usar limite.
-            </p>
-            <input
-              value={budgetInput}
-              onChange={(e) => setBudgetInput(e.target.value)}
-              inputMode="decimal"
-              placeholder="Ex: 1500"
-              className="w-full mb-4 rounded-xl border border-ink/10 bg-white px-4 py-3 font-body text-sm outline-none focus:border-plum"
-            />
-            <button
-              onClick={saveBudget}
-              className="w-full bg-plum text-paper font-body font-medium rounded-xl py-3"
-            >
-              Guardar
-            </button>
-          </div>
-        </div>
-      )}
-
-      <Nav />
+      <Nav onAdd={() => setShowForm(true)} />
     </div>
   );
 }

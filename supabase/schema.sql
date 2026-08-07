@@ -59,7 +59,8 @@ create table if not exists expenses (
 
 create table if not exists user_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  monthly_budget numeric
+  monthly_budget numeric,
+  display_name text
 );
 
 create index if not exists expenses_user_due_idx on expenses (user_id, due_date);

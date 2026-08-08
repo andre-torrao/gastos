@@ -37,7 +37,8 @@ export default function LoginPage() {
 
   return (
     <div className="phone-shell px-6" style={{ paddingTop: "max(6rem, calc(env(safe-area-inset-top) + 4rem))" }}>
-      <h1 className="font-display text-3xl font-semibold mb-1">Gastos</h1>
+      <img src="/icon.png" alt="Bolso +" className="w-14 h-14 rounded-2xl mb-4" />
+      <h1 className="font-display text-3xl font-semibold mb-1">Bolso +</h1>
       <p className="text-ink/50 font-body text-sm mb-8">A tua gestao pessoal de despesas.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">

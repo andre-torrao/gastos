@@ -1,4 +1,4 @@
-# Gastos — app pessoal de gestão de despesas
+# Bolso + — app pessoal de gestão de despesas
 
 App em Next.js + Supabase para substituir o teu Excel. Permite:
 

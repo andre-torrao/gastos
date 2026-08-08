@@ -15,13 +15,17 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Gastos",
+  title: "Bolso +",
   description: "Gestao pessoal de gastos",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Gastos",
+    title: "Bolso +",
   },
 };
 

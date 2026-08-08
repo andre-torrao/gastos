@@ -1,10 +1,17 @@
 {
-  "name": "Gastos",
-  "short_name": "Gastos",
+  "name": "Bolso +",
+  "short_name": "Bolso +",
   "description": "Gestao pessoal de gastos",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F8F0DF",
   "theme_color": "#F8F0DF",
-  "icons": []
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }

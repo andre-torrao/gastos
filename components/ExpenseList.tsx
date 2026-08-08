@@ -16,6 +16,11 @@ function categoryFor(exp: Expense, categories: Category[], macros: MacroCategory
   return { label: "Sem categoria", color: "#999" };
 }
 
+const ACCOUNT_BADGE: Record<string, string> = {
+  poupanca: "Poupança",
+  subsidio_refeicao: "Subsídio",
+};
+
 export default function ExpenseList({
   expenses,
   categories,
@@ -73,9 +78,9 @@ export default function ExpenseList({
               <p className="font-body text-sm font-medium text-ink truncate flex items-center gap-1.5">
                 {exp.description}
                 {exp.recurring && <Repeat size={12} className="text-ink/30 shrink-0" />}
-                {exp.account === "poupanca" && (
+                {exp.account !== "principal" && (
                   <span className="text-[9px] font-body bg-sage-soft text-sage px-1.5 py-0.5 rounded-full shrink-0">
-                    Poupança
+                    {ACCOUNT_BADGE[exp.account]}
                   </span>
                 )}
               </p>

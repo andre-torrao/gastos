@@ -50,7 +50,8 @@ create table if not exists expenses (
   paid boolean not null default false,
   paid_date date,
   recurring boolean not null default false,
-  account text not null default 'principal' check (account in ('principal', 'poupanca')),
+  recurring_until date,
+  account text not null default 'principal' check (account in ('principal', 'poupanca', 'subsidio_refeicao')),
   notes text,
   created_at timestamptz not null default now()
 );
@@ -120,6 +121,9 @@ begin
   for r in
     select * from expenses where recurring = true
   loop
+    if r.recurring_until is not null and (r.due_date + interval '1 month')::date > r.recurring_until then
+      continue;
+    end if;
     if not exists (
       select 1 from expenses
       where user_id = r.user_id
@@ -128,8 +132,8 @@ begin
         and moment_id is not distinct from r.moment_id
         and due_date = (r.due_date + interval '1 month')::date
     ) then
-      insert into expenses (user_id, category_id, moment_id, description, amount, due_date, paid, recurring, account, notes)
-      values (r.user_id, r.category_id, r.moment_id, r.description, r.amount, (r.due_date + interval '1 month')::date, false, true, r.account, r.notes);
+      insert into expenses (user_id, category_id, moment_id, description, amount, due_date, paid, recurring, recurring_until, account, notes)
+      values (r.user_id, r.category_id, r.moment_id, r.description, r.amount, (r.due_date + interval '1 month')::date, false, true, r.recurring_until, r.account, r.notes);
     end if;
   end loop;
 end;

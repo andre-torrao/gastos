@@ -150,9 +150,8 @@ function DashboardInner() {
         />
       </div>
 
-      <div className="mt-8 flex items-center justify-between mb-3">
+      <div className="mt-8 mb-3">
         <h2 className="font-display text-lg font-semibold">{RANGE_LABEL[rangeMode]}</h2>
-        <span className="text-xs font-body text-ink/40">{expenses.length} lancamentos</span>
       </div>
       <ExpenseList
         expenses={expenses}

@@ -5,6 +5,14 @@ import { Trash2, X } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import type { Category, Expense, MacroCategory, Moment } from "@/lib/types";
 
+type Account = "principal" | "poupanca" | "subsidio_refeicao";
+
+const ACCOUNT_LABEL: Record<Account, string> = {
+  principal: "Conta principal",
+  poupanca: "Conta poupança",
+  subsidio_refeicao: "Subsídio de Refeição",
+};
+
 export default function ExpenseForm({
   userId,
   macroCategories,
@@ -31,9 +39,10 @@ export default function ExpenseForm({
   const [dueDate, setDueDate] = useState(expense?.due_date ?? new Date().toISOString().slice(0, 10));
   const [categoryId, setCategoryId] = useState<string>(expense?.category_id ?? categories[0]?.id ?? "");
   const [momentId, setMomentId] = useState<string>(expense?.moment_id ?? defaultMomentId ?? "");
-  const [account, setAccount] = useState<"principal" | "poupanca">(expense?.account ?? "principal");
+  const [account, setAccount] = useState<Account>(expense?.account ?? "principal");
   const [notes, setNotes] = useState(expense?.notes ?? "");
   const [recurring, setRecurring] = useState(expense?.recurring ?? false);
+  const [recurringUntil, setRecurringUntil] = useState(expense?.recurring_until ?? "");
   const [paidNow, setPaidNow] = useState(expense?.paid ?? false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -65,10 +74,13 @@ export default function ExpenseForm({
     due_date: string;
     category_id: string | null;
     moment_id: string | null;
-    account: "principal" | "poupanca";
+    account: Account;
     notes: string | null;
+    recurring_until: string | null;
   }) {
     const nextDue = addMonth(payload.due_date);
+    if (payload.recurring_until && nextDue > payload.recurring_until) return;
+
     let query = supabase
       .from("expenses")
       .select("id")
@@ -91,6 +103,7 @@ export default function ExpenseForm({
         account: payload.account,
         notes: payload.notes,
         recurring: true,
+        recurring_until: payload.recurring_until,
         paid: false,
         paid_date: null,
       });
@@ -115,6 +128,7 @@ export default function ExpenseForm({
       moment_id: momentId || null,
       account,
       notes: notes.trim() || null,
+      recurring_until: recurring && recurringUntil ? recurringUntil : null,
     };
 
     if (isEditing && expense) {
@@ -208,14 +222,19 @@ export default function ExpenseForm({
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div>
-            <label className="block text-xs font-body text-ink/60 mb-1">Valor (€)</label>
-            <input
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              inputMode="decimal"
-              placeholder="0,00"
-              className="w-full rounded-xl border border-ink/10 bg-white px-4 py-3 font-body text-sm outline-none focus:border-plum"
-            />
+            <label className="block text-xs font-body text-ink/60 mb-1">Valor</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40 font-body text-sm pointer-events-none">
+                €
+              </span>
+              <input
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                inputMode="decimal"
+                placeholder="0,00"
+                className="w-full rounded-xl border border-ink/10 bg-white pl-8 pr-4 py-3 font-body text-sm outline-none focus:border-plum"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-xs font-body text-ink/60 mb-1">Data</label>
@@ -266,25 +285,19 @@ export default function ExpenseForm({
         )}
 
         <label className="block text-xs font-body text-ink/60 mb-1">Conta</label>
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <button
-            type="button"
-            onClick={() => setAccount("principal")}
-            className={`rounded-xl border py-2.5 text-sm font-body transition-colors ${
-              account === "principal" ? "bg-plum text-paper border-plum" : "border-ink/10 bg-white text-ink/70"
-            }`}
-          >
-            Conta principal
-          </button>
-          <button
-            type="button"
-            onClick={() => setAccount("poupanca")}
-            className={`rounded-xl border py-2.5 text-sm font-body transition-colors ${
-              account === "poupanca" ? "bg-plum text-paper border-plum" : "border-ink/10 bg-white text-ink/70"
-            }`}
-          >
-            Conta poupança
-          </button>
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {(Object.keys(ACCOUNT_LABEL) as Account[]).map((a) => (
+            <button
+              key={a}
+              type="button"
+              onClick={() => setAccount(a)}
+              className={`rounded-xl border py-2.5 text-xs font-body leading-tight transition-colors ${
+                account === a ? "bg-plum text-paper border-plum" : "border-ink/10 bg-white text-ink/70"
+              }`}
+            >
+              {ACCOUNT_LABEL[a]}
+            </button>
+          ))}
         </div>
 
         <label className="block text-xs font-body text-ink/60 mb-1">Notas (opcional)</label>
@@ -296,7 +309,7 @@ export default function ExpenseForm({
           className="w-full mb-4 rounded-xl border border-ink/10 bg-white px-4 py-3 font-body text-sm outline-none focus:border-plum resize-none"
         />
 
-        <div className="flex items-center gap-6 mb-6">
+        <div className="flex items-center gap-6 mb-4">
           <label className="flex items-center gap-2 text-sm font-body text-ink/80">
             <input type="checkbox" checked={recurring} onChange={(e) => setRecurring(e.target.checked)} />
             Repete todos os meses
@@ -306,6 +319,21 @@ export default function ExpenseForm({
             Ja esta pago
           </label>
         </div>
+
+        {recurring && (
+          <div className="mb-6">
+            <label className="block text-xs font-body text-ink/60 mb-1">
+              Repetir até (opcional — deixa vazio para repetir sempre)
+            </label>
+            <input
+              type="date"
+              value={recurringUntil}
+              onChange={(e) => setRecurringUntil(e.target.value)}
+              min={dueDate}
+              className="w-full rounded-xl border border-ink/10 bg-white px-4 py-3 font-body text-sm outline-none focus:border-plum"
+            />
+          </div>
+        )}
 
         {error && <p className="text-coral text-sm font-body mb-3">{error}</p>}
 

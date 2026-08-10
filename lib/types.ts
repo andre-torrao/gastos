@@ -21,6 +21,7 @@ export type Moment = {
   name: string;
   icon: string;
   color: string;
+  type: "moment" | "credit";
   start_date: string;
   end_date: string | null;
   budget: number | null;

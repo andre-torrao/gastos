@@ -46,21 +46,28 @@ export default function MomentDetailPage() {
   }, [user, momentId]);
 
   async function deleteMoment() {
-    if (!user) return;
-    if (!confirm("Apagar este momento? Os gastos associados tambem serao apagados.")) return;
+    if (!user || !moment) return;
+    const noun = moment.type === "credit" ? "este crédito" : "este momento";
+    if (!confirm(`Apagar ${noun}? Os gastos associados também serão apagados.`)) return;
     await supabase.from("moments").delete().eq("id", momentId);
-    router.push("/moments");
+    router.push("/");
   }
 
   if (loading || !user || !moment) return null;
 
-  const total = expenses.reduce((a, e) => a + Number(e.amount), 0);
-  const pct = moment.budget ? Math.min(100, (total / moment.budget) * 100) : null;
+  const isCredit = moment.type === "credit";
+  const totalSpent = expenses.reduce((a, e) => a + Number(e.amount), 0);
+  const totalPaid = expenses.filter((e) => e.paid).reduce((a, e) => a + Number(e.amount), 0);
+  const displayValue = isCredit ? totalPaid : totalSpent;
+  const remaining = isCredit && moment.budget ? Math.max(0, moment.budget - totalPaid) : null;
+  const pct = moment.budget
+    ? Math.min(100, ((isCredit ? totalPaid : totalSpent) / moment.budget) * 100)
+    : null;
 
   return (
     <div className="phone-shell px-5" style={{ paddingTop: "max(2rem, env(safe-area-inset-top))" }}>
       <div className="flex items-center justify-between mb-6">
-        <button onClick={() => router.push("/moments")} className="p-2 -ml-2 text-ink/60">
+        <button onClick={() => router.push("/")} className="p-2 -ml-2 text-ink/60">
           <ArrowLeft size={20} />
         </button>
         <button onClick={deleteMoment} className="p-2 text-coral/70">
@@ -76,7 +83,14 @@ export default function MomentDetailPage() {
           <span className="w-4 h-4 rounded-full" style={{ backgroundColor: moment.color }} />
         </div>
         <div>
-          <h1 className="font-display text-2xl font-semibold">{moment.name}</h1>
+          <h1 className="font-display text-2xl font-semibold flex items-center gap-2">
+            {moment.name}
+            {isCredit && (
+              <span className="text-[10px] font-body bg-gold/25 text-ink/70 px-2 py-0.5 rounded-full">
+                Crédito
+              </span>
+            )}
+          </h1>
           <p className="text-xs text-ink/40 font-body">
             desde {new Date(moment.start_date + "T00:00:00").toLocaleDateString("pt-PT")}
           </p>
@@ -84,23 +98,32 @@ export default function MomentDetailPage() {
       </div>
 
       <div className="bg-white rounded-xl2 p-6 border border-ink/5 mb-8 text-center">
-        <p className="text-[11px] uppercase tracking-wide text-ink/50 font-body">Ja gasto</p>
-        <p className="font-display text-4xl font-semibold mt-1">{formatEuro(total)}</p>
+        <p className="text-[11px] uppercase tracking-wide text-ink/50 font-body">
+          {isCredit ? "Já pago" : "Já gasto"}
+        </p>
+        <p className="font-display text-4xl font-semibold mt-1">{formatEuro(displayValue)}</p>
         {moment.budget && (
           <>
-            <p className="text-xs text-ink/40 font-body mt-1">de {formatEuro(moment.budget)} planeados</p>
+            <p className="text-xs text-ink/40 font-body mt-1">
+              {isCredit ? `de ${formatEuro(moment.budget)} do crédito total` : `de ${formatEuro(moment.budget)} planeados`}
+            </p>
             <div className="h-2 rounded-full bg-ink/5 overflow-hidden mt-3">
               <div
                 className="h-full rounded-full"
                 style={{ width: `${pct}%`, backgroundColor: moment.color }}
               />
             </div>
+            {isCredit && (
+              <p className="text-xs text-ink/50 font-body mt-3">
+                Ainda em falta: <span className="font-semibold text-ink">{formatEuro(remaining ?? 0)}</span>
+              </p>
+            )}
           </>
         )}
       </div>
 
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-display text-lg font-semibold">Gastos</h2>
+        <h2 className="font-display text-lg font-semibold">{isCredit ? "Prestações" : "Gastos"}</h2>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-1 text-xs font-body text-plum font-medium"

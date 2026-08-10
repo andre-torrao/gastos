@@ -33,6 +33,7 @@ create table if not exists moments (
   name text not null,
   icon text not null default '✨',
   color text not null default '#4B2E56',
+  type text not null default 'moment' check (type in ('moment', 'credit')),
   start_date date not null default current_date,
   end_date date,
   budget numeric,

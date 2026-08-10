@@ -50,7 +50,7 @@ export default function MomentDetailPage() {
     const noun = moment.type === "credit" ? "este crédito" : "este momento";
     if (!confirm(`Apagar ${noun}? Os gastos associados também serão apagados.`)) return;
     await supabase.from("moments").delete().eq("id", momentId);
-    router.push("/");
+    router.push("/moments");
   }
 
   if (loading || !user || !moment) return null;
@@ -67,7 +67,7 @@ export default function MomentDetailPage() {
   return (
     <div className="phone-shell px-5" style={{ paddingTop: "max(2rem, env(safe-area-inset-top))" }}>
       <div className="flex items-center justify-between mb-6">
-        <button onClick={() => router.push("/")} className="p-2 -ml-2 text-ink/60">
+        <button onClick={() => router.push("/moments")} className="p-2 -ml-2 text-ink/60">
           <ArrowLeft size={20} />
         </button>
         <button onClick={deleteMoment} className="p-2 text-coral/70">

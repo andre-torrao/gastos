@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Sparkles, CalendarDays, Tags, User, Plus } from "lucide-react";
+import { Sparkles, LayoutGrid, Tags, User, Plus } from "lucide-react";
 
 const LEFT_ITEMS = [
-  { href: "/", label: "Início", icon: Sparkles },
-  { href: "/mes", label: "Mês", icon: CalendarDays },
+  { href: "/", label: "Mês", icon: LayoutGrid },
+  { href: "/moments", label: "Momentos", icon: Sparkles },
 ];
 
 const RIGHT_ITEMS = [

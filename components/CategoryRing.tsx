@@ -18,7 +18,8 @@ function formatEuro(n: number) {
 
 const SIZE = 240;
 const STROKE = 20;
-const RADIUS = (SIZE - STROKE) / 2;
+const MARGIN = 16; // espaco em volta do anel dentro do seu quadro
+const RADIUS = (SIZE - STROKE) / 2 - MARGIN;
 const GAP = 5.5; // percentagem da circunferencia reservada como espaco entre categorias
 const PENDING_ALPHA = "4D"; // ~30% opacidade para a parte "por pagar"
 

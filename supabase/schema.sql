@@ -43,7 +43,7 @@ create table if not exists moments (
 create table if not exists expenses (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  category_id uuid references macro_categories(id) on delete set null,
+  category_id uuid,
   moment_id uuid references moments(id) on delete cascade,
   description text not null,
   amount numeric not null check (amount > 0),

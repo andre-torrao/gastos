@@ -18,7 +18,7 @@ function formatEuro(n: number) {
 
 const RING_BOX = 240; // tamanho do proprio anel (mantem o espaco interior do texto igual)
 const STROKE = 20;
-const PADDING = 18; // moldura a volta do anel, dentro do seu quadro
+const PADDING = 26; // moldura a volta do anel, dentro do seu quadro
 const SIZE = RING_BOX + PADDING * 2;
 const RADIUS = (RING_BOX - STROKE) / 2;
 const GAP = 5.5; // percentagem da circunferencia reservada como espaco entre categorias
@@ -114,7 +114,7 @@ export default function CategoryRing({
           {budget !== null && (
             <span className="text-[11px] text-ink/40 font-body mt-0.5">de {formatEuro(budget)}</span>
           )}
-          <div className="flex items-center gap-3 mt-3">
+          <div className="flex flex-col items-center gap-0.5 mt-3">
             <span className="flex items-center gap-1 text-[10px] font-body text-ink/50">
               <span className="w-2 h-2 rounded-full bg-ink/70" /> Pago {formatEuro(totalPaid)}
             </span>

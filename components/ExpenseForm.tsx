@@ -20,6 +20,7 @@ export default function ExpenseForm({
   moments,
   defaultMomentId,
   expense,
+  lockMoment,
   onClose,
   onSaved,
 }: {
@@ -29,6 +30,7 @@ export default function ExpenseForm({
   moments: Moment[];
   defaultMomentId?: string | null;
   expense?: Expense | null;
+  lockMoment?: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -266,7 +268,7 @@ export default function ExpenseForm({
           ))}
         </select>
 
-        {moments.length > 0 && (
+        {!lockMoment && moments.length > 0 && (
           <>
             <label className="block text-xs font-body text-ink/60 mb-1">Momento (opcional)</label>
             <select
@@ -282,6 +284,15 @@ export default function ExpenseForm({
               ))}
             </select>
           </>
+        )}
+
+        {lockMoment && moments.length > 0 && (
+          <div className="mb-4">
+            <label className="block text-xs font-body text-ink/60 mb-1">Momento</label>
+            <p className="w-full rounded-xl border border-ink/5 bg-plum-soft px-4 py-3 font-body text-sm text-plum font-medium">
+              {moments[0]?.name}
+            </p>
+          </div>
         )}
 
         <label className="block text-xs font-body text-ink/60 mb-1">Conta</label>

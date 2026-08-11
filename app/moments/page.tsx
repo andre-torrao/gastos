@@ -334,8 +334,9 @@ export default function MomentsPage() {
           userId={user.id}
           macroCategories={macroCategories}
           categories={categories}
-          moments={moments}
+          moments={moments.filter((m) => m.id === editingExpense.moment_id)}
           expense={editingExpense}
+          lockMoment
           onClose={() => setEditingExpense(null)}
           onSaved={() => {
             setEditingExpense(null);

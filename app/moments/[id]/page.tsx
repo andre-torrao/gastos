@@ -147,6 +147,7 @@ export default function MomentDetailPage() {
           categories={categories}
           moments={[moment]}
           defaultMomentId={moment.id}
+          lockMoment
           onClose={() => setShowForm(false)}
           onSaved={() => {
             setShowForm(false);
@@ -162,6 +163,7 @@ export default function MomentDetailPage() {
           categories={categories}
           moments={[moment]}
           expense={editingExpense}
+          lockMoment
           onClose={() => setEditingExpense(null)}
           onSaved={() => {
             setEditingExpense(null);

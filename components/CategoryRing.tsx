@@ -16,10 +16,11 @@ function formatEuro(n: number) {
   });
 }
 
-const SIZE = 240;
+const RING_BOX = 240; // tamanho do proprio anel (mantem o espaco interior do texto igual)
 const STROKE = 20;
-const MARGIN = 16; // espaco em volta do anel dentro do seu quadro
-const RADIUS = (SIZE - STROKE) / 2 - MARGIN;
+const PADDING = 18; // moldura a volta do anel, dentro do seu quadro
+const SIZE = RING_BOX + PADDING * 2;
+const RADIUS = (RING_BOX - STROKE) / 2;
 const GAP = 5.5; // percentagem da circunferencia reservada como espaco entre categorias
 const PENDING_ALPHA = "4D"; // ~30% opacidade para a parte "por pagar"
 

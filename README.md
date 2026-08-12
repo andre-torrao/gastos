@@ -92,3 +92,17 @@ supabase/schema.sql     → esquema da base de dados + automação
 - Cores/ícones das categorias-macro por omissão: `lib/defaultCategories.ts`
 - Paleta de cores: `tailwind.config.ts` e `lib/types.ts` (`PALETTE`)
 - Limite mensal: botão de engrenagem no topo do dashboard
+
+## Manter o Supabase "acordado" (cron de keep-alive)
+
+`app/api/keep-alive/route.ts` faz um pedido mínimo ao Supabase (uma
+contagem de linhas, sem devolver dados) e `vercel.json` agenda o Vercel
+para o chamar uma vez por dia. Isto é útil no plano gratuito do Supabase,
+que pausa projetos após um período de inatividade.
+
+A rota só responde a pedidos que tragam o cabeçalho `Authorization: Bearer
+<CRON_SECRET>`. O Vercel adiciona esse cabeçalho automaticamente sempre
+que o projeto tem uma variável de ambiente chamada `CRON_SECRET` — mas
+**tens de a criar tu**, o Vercel não a gera sozinho. Ver "Configurar" no
+passo a passo que o Claude te deu para os valores exatos.
+
